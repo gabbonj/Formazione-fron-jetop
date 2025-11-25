@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,32 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <div className="min-h-screen bg-[#0b0f13] text-zinc-100">
+          <div className="mx-auto relative grid max-w-6xl grid-cols-12 gap-6 px-6 py-12">
+            <aside className="fixed left-10 top-0 h-screen w-80 flex flex-col justify-between border-r border-zinc-800/60 pr-8 bg-[#0b0f13] z-20">
+              <div className="pt-12">
+                <h2 className="mb-6 text-3xl font-bold">Partecipa alla conversazione</h2>
+                <div className="flex w-full flex-col gap-3">
+                  <Button asChild className="w-full rounded-full bg-[#0081f1] text-white hover:bg-[#003865]" size="lg">
+                    <Link href="/signup">Crea account</Link>
+                  </Button>
+                  <Button asChild className="w-full rounded-full bg-black" variant="outline" size="lg">
+                    <Link href="/login">Accedi</Link>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="pb-8">
+                <nav className="flex flex-col gap-2 text-sm text-zinc-400">
+                  <Link className="text-[#217FE9] hover:text-zinc-200" href="/terms">Termini di servizio</Link>
+                  <Link className="text-[#217FE9] hover:text-zinc-200" href="/privacy">Informativa sulla privacy</Link>
+                </nav>
+              </div>
+            </aside>
+
+            <main className="col-span-12 ml-80">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   );
