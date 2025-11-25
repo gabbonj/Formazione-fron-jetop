@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount, fetchUser } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getUsername, getUserSlug } from "@/lib/utils";
+import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export type Post = {
@@ -17,8 +17,12 @@ export type Post = {
 };
 
 export default function PostItem({ post }: { post: Post }) {
-  const [authorName, setAuthorName] = useState<string>(() => getUsername(post));
-  const [authorSlug, setAuthorSlug] = useState<string>(() => getUserSlug(post));
+  const initialName = getUsername(post);
+  const [authorName, setAuthorName] = useState<string>(() => (initialName && !isLikelyId(initialName) ? initialName : ""));
+  const [authorSlug, setAuthorSlug] = useState<string>(() => {
+    const s = getUserSlug(post);
+    return s && !isLikelyId(s) ? s : "";
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -107,9 +111,13 @@ export default function PostItem({ post }: { post: Post }) {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <Link href={`/user/${authorSlug ?? ""}`} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
-                    @{authorName}
-                  </Link>
+                  {authorName ? (
+                    <Link href={`/user/${authorSlug ?? ""}`} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
+                      @{authorName}
+                    </Link>
+                  ) : (
+                    <span className="inline-block h-4 w-28 rounded bg-zinc-700 animate-pulse" />
+                  )}
                   <span className="text-xs text-zinc-500">• {new Date(post.created_at).toLocaleString()}</span>
                 </div>
               </div>

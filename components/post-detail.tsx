@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getUsername, getUserSlug } from "@/lib/utils";
+import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 import Link from "next/link";
 import { fetchPost, fetchComments, createComment } from "@/lib/api";
@@ -16,8 +16,12 @@ type Comment = { id: string; content: string; created_at: string; user?: { usern
 
 export default function PostDetail({ id }: { id: string }) {
   const [post, setPost] = useState<any | null>(null);
-  const [authorName, setAuthorName] = useState<string>(() => getUsername(post));
-  const [authorSlug, setAuthorSlug] = useState<string>(() => getUserSlug(post));
+  const initialName = getUsername(post);
+  const [authorName, setAuthorName] = useState<string>(() => (initialName && !isLikelyId(initialName) ? initialName : ""));
+  const [authorSlug, setAuthorSlug] = useState<string>(() => {
+    const s = getUserSlug(post);
+    return s && !isLikelyId(s) ? s : "";
+  });
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -112,7 +116,7 @@ export default function PostDetail({ id }: { id: string }) {
                       <AvatarFallback>{authorName?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
               </Avatar>
               <div>
-                      <div className="text-sm font-semibold text-zinc-100">@{authorName}</div>
+                      <div className="text-sm font-semibold text-zinc-100">{authorName ? `@${authorName}` : <span className="inline-block h-5 w-40 rounded bg-zinc-700 animate-pulse" />}</div>
                 <div className="text-xs text-zinc-500">{new Date(post.created_at).toLocaleString()}</div>
               </div>
             </div>

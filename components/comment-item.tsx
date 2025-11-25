@@ -4,12 +4,16 @@ import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getUsername, getUserSlug } from "@/lib/utils";
+import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 
 export default function CommentItem({ comment }: { comment: any }) {
-  const [authorName, setAuthorName] = useState<string>(() => getUsername(comment));
-  const [authorSlug, setAuthorSlug] = useState<string>(() => getUserSlug(comment));
+  const initialName = getUsername(comment);
+  const [authorName, setAuthorName] = useState<string>(() => (initialName && !isLikelyId(initialName) ? initialName : ""));
+  const [authorSlug, setAuthorSlug] = useState<string>(() => {
+    const s = getUserSlug(comment);
+    return s && !isLikelyId(s) ? s : "";
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -44,7 +48,11 @@ export default function CommentItem({ comment }: { comment: any }) {
 
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-zinc-100">{authorName}</span>
+          {authorName ? (
+            <span className="text-sm font-semibold text-zinc-100">{authorName}</span>
+          ) : (
+            <span className="inline-block h-4 w-24 rounded bg-zinc-700 animate-pulse" />
+          )}
           <span className="text-xs text-zinc-500">{new Date(comment.created_at).toLocaleString()}</span>
         </div>
 

@@ -37,3 +37,15 @@ export function getUserSlug(obj: any): string {
   if (obj && obj.id) return String(obj.id);
   return '';
 }
+
+export function isLikelyId(value: string | null | undefined): boolean {
+  if (!value) return false;
+  // UUID v4-ish pattern
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(value)) return true;
+  // numeric ids
+  if (/^\d+$/.test(value)) return true;
+  // short hex-ish ids (like supabase simple ids)
+  if (/^[0-9a-f]{6,32}$/i.test(value) && value.length >= 8) return true;
+  return false;
+}
