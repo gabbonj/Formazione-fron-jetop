@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { fetchComments } from "@/lib/api";
+import { fetchPosts } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostItem from "@/components/post-item";
@@ -21,11 +21,13 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    fetchComments()
+    fetchPosts()
       .then((res: any) => {
-        // Try to read items from response shape
+        // API may return { items: [...] } or array
+        if (res == null) return setItems([]);
         if (Array.isArray(res.items)) setItems(res.items);
         else if (Array.isArray(res)) setItems(res);
+        else if (Array.isArray(res.items?.items)) setItems(res.items.items);
         else setItems([]);
       })
       .catch((err: unknown) => {
@@ -39,7 +41,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0b0f13] text-zinc-100">
       <div className="mx-auto grid max-w-6xl grid-cols-12 gap-6 px-6 py-12">
         <main className="col-span-8 flex justify-center">
-          <div className="w-full max-w-lg">
+          <div className="w-full max-w-3xl">
             <h3 className="mb-6 text-center text-2xl font-semibold">Discover</h3>
 
             {/* vorre che fosse piu largo questo contenitore */}
