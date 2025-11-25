@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount, fetchUser } from "@/lib/api";
@@ -23,6 +24,7 @@ export default function PostItem({ post }: { post: Post }) {
     const s = getUserSlug(post);
     return s && !isLikelyId(s) ? s : "";
   });
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
@@ -99,7 +101,7 @@ export default function PostItem({ post }: { post: Post }) {
 
   return (
     <article className="py-4">
-      <div className="w-full bg-[#071018] border border-zinc-800 p-4 rounded-sm">
+      <div className="w-full bg-[#071018] border border-zinc-800 p-4 rounded-sm transition-transform transform duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-zinc-600 hover:bg-[#0b1a23]">
         <div className="flex gap-4">
           <div className="shrink-0">
             <Avatar className="h-9 w-9">
@@ -112,7 +114,7 @@ export default function PostItem({ post }: { post: Post }) {
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
                   {authorName ? (
-                    <Link href={`/user/${authorSlug ?? ""}`} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
+                    <Link href={`/user/${authorSlug ?? ""}`} onClick={(e:any) => e.stopPropagation()} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
                       @{authorName}
                     </Link>
                   ) : (
@@ -123,19 +125,27 @@ export default function PostItem({ post }: { post: Post }) {
               </div>
             </div>
 
-            <div className="mt-3 text-zinc-200 text-sm prose prose-invert max-w-none">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(`/post/${post.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") router.push(`/post/${post.id}`);
+              }}
+              className="mt-3 text-zinc-200 text-sm prose prose-invert max-w-none"
+            >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
             </div>
 
             <div className="mt-4 flex items-center gap-6 text-sm text-zinc-400">
-              <button aria-label="Like" onClick={toggleLike} className="flex items-center gap-2 text-zinc-300 hover:text-pink-400">
+              <button aria-label="Like" onClick={(e) => { e.stopPropagation(); toggleLike(); }} className="flex items-center gap-2 text-zinc-300 hover:text-pink-400">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
                   <path d="M20.8 7.2c0 5-8.8 9.9-8.8 9.9s-8.8-4.9-8.8-9.9a4.4 4.4 0 0 1 7.8-3.1 4.4 4.4 0 0 1 7.8 3.1z" />
                 </svg>
                 <span className="text-sm">{likes}</span>
               </button>
 
-              <Link href={`/post/${post.id}`} className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
+              <Link href={`/post/${post.id}`} onClick={(e:any) => e.stopPropagation()} className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
