@@ -4,8 +4,9 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount } from "@/lib/api";
+import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount, fetchUser } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getUsername, getUserSlug } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export type Post = {
@@ -16,6 +17,33 @@ export type Post = {
 };
 
 export default function PostItem({ post }: { post: Post }) {
+  const [authorName, setAuthorName] = useState<string>(() => getUsername(post));
+  const [authorSlug, setAuthorSlug] = useState<string>(() => getUserSlug(post));
+
+  useEffect(() => {
+    let mounted = true;
+    const hasUsername = Boolean(post.user && (post.user as any).username);
+    const userId = (post as any).user_id ?? post.user?.id;
+    if (!hasUsername && userId) {
+      fetchUser(String(userId))
+        .then((u: any) => {
+          if (!mounted) return;
+          const uname = u?.username || getUsername(post);
+          setAuthorName(uname);
+          setAuthorSlug(u?.username || String(u?.id || userId));
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setAuthorName(getUsername(post));
+          setAuthorSlug(String(userId));
+        });
+    } else {
+      setAuthorName(getUsername(post));
+      setAuthorSlug(getUserSlug(post));
+    }
+    return () => { mounted = false; };
+  }, [post]);
+
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
   useEffect(() => {
@@ -71,7 +99,7 @@ export default function PostItem({ post }: { post: Post }) {
         <div className="flex gap-4">
           <div className="shrink-0">
             <Avatar className="h-9 w-9">
-              <AvatarFallback className="text-sm">{post.user?.username?.[0]?.toUpperCase() ?? "G"}</AvatarFallback>
+              <AvatarFallback className="text-sm">{authorName?.[0]?.toUpperCase() ?? "G"}</AvatarFallback>
             </Avatar>
           </div>
 
@@ -79,8 +107,8 @@ export default function PostItem({ post }: { post: Post }) {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <Link href={`/user/${post.user?.username ?? ""}`} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
-                    @{post.user?.username ?? "anonimo"}
+                  <Link href={`/user/${authorSlug ?? ""}`} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
+                    @{authorName}
                   </Link>
                   <span className="text-xs text-zinc-500">• {new Date(post.created_at).toLocaleString()}</span>
                 </div>

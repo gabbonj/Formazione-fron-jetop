@@ -86,6 +86,10 @@ export async function fetchPost(id: string) {
   return request(`/api/posts/${id}`, { method: 'GET' });
 }
 
+export async function fetchUser(id: string) {
+  return request(`/api/users/${id}`, { method: 'GET' });
+}
+
 export async function fetchLikesCount(post_id: string) {
   const qs = new URLSearchParams({ post_id, count: 'true' });
   return request(`/api/likes?${qs.toString()}`, { method: 'GET' });

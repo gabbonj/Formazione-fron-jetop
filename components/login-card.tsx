@@ -86,7 +86,7 @@ export default function LoginCard() {
         </form>
       ) : (
         <form onSubmit={handleVerify} className="space-y-4">
-          <div className="text-center text-sm text-zinc-400">Inserisci il codice OTP ricevuto</div>
+          <div className="text-center text-sm text-zinc-400">Inserisci il codice OTP che trovi su google authenticator</div>
 
           <div>
             <Label className="text-zinc-300">OTP</Label>

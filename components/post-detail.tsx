@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getUsername, getUserSlug } from "@/lib/utils";
+import { fetchUser } from "@/lib/api";
 import Link from "next/link";
 import { fetchPost, fetchComments, createComment } from "@/lib/api";
 import { getToken } from "@/lib/api";
@@ -14,6 +16,8 @@ type Comment = { id: string; content: string; created_at: string; user?: { usern
 
 export default function PostDetail({ id }: { id: string }) {
   const [post, setPost] = useState<any | null>(null);
+  const [authorName, setAuthorName] = useState<string>(() => getUsername(post));
+  const [authorSlug, setAuthorSlug] = useState<string>(() => getUserSlug(post));
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -48,6 +52,30 @@ export default function PostDetail({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    let mounted = true;
+    if (!post) return;
+    const hasUsername = Boolean(post.user && post.user.username);
+    const userId = (post as any).user_id ?? post.user?.id;
+    if (!hasUsername && userId) {
+      fetchUser(String(userId))
+        .then((u: any) => {
+          if (!mounted) return;
+          setAuthorName(u?.username || getUsername(post));
+          setAuthorSlug(u?.username || String(u?.id || userId));
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setAuthorName(getUsername(post));
+          setAuthorSlug(String(userId));
+        });
+    } else {
+      setAuthorName(getUsername(post));
+      setAuthorSlug(getUserSlug(post));
+    }
+    return () => { mounted = false; };
+  }, [post]);
+
   async function submitComment() {
     if (!text.trim()) return;
     try {
@@ -81,10 +109,10 @@ export default function PostDetail({ id }: { id: string }) {
           <header className="mb-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarFallback>{post.user?.username?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
+                      <AvatarFallback>{authorName?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="text-sm font-semibold text-zinc-100">@{post.user?.username ?? 'anonimo'}</div>
+                      <div className="text-sm font-semibold text-zinc-100">@{authorName}</div>
                 <div className="text-xs text-zinc-500">{new Date(post.created_at).toLocaleString()}</div>
               </div>
             </div>
