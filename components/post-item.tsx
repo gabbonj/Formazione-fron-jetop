@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { fetchLikesCount, addLike, removeLike, getToken } from "@/lib/api";
+import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +26,19 @@ export default function PostItem({ post }: { post: Post }) {
         if (typeof res.count === 'number') setLikes(res.count);
         else if (Array.isArray(res.items)) setLikes(res.items.length);
         else if (typeof res === 'number') setLikes(res);
+      })
+      .catch(() => {})
+      .finally(() => {});
+    return () => { mounted = false; };
+  }, [post.id]);
+
+  const [commentCount, setCommentCount] = useState(0);
+  useEffect(() => {
+    let mounted = true;
+    fetchCommentsCount(post.id)
+      .then((c) => {
+        if (!mounted) return;
+        setCommentCount(typeof c === 'number' ? c : 0);
       })
       .catch(() => {})
       .finally(() => {});
@@ -88,7 +101,7 @@ export default function PostItem({ post }: { post: Post }) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <span className="text-sm">0</span>
+                <span className="text-sm">{commentCount}</span>
               </Link>
             </div>
           </div>

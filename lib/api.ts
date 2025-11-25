@@ -60,6 +60,19 @@ export async function fetchComments(params?: { post_id?: string; limit?: number;
   });
 }
 
+export async function fetchCommentsCount(post_id: string) {
+  const qs = new URLSearchParams({ post_id, limit: '1' });
+  const path = `/api/comments?${qs.toString()}`;
+  const res = await request(path, { method: 'GET' });
+  // API may return { items: [...], count } or an array
+  if (res == null) return 0;
+  if (typeof res.count === 'number') return res.count;
+  if (Array.isArray(res.items) && typeof res.items.length === 'number' && typeof res.count === 'number') return res.count;
+  if (Array.isArray(res)) return res.length;
+  if (Array.isArray(res.items)) return res.items.length;
+  return 0;
+}
+
 export async function fetchPosts(params?: { limit?: number; offset?: number; user_id?: string }) {
   const qs = new URLSearchParams();
   if (params?.limit) qs.set('limit', String(params.limit));
@@ -136,6 +149,7 @@ export default {
   addLike,
   removeLike,
   createComment,
+  fetchCommentsCount,
   saveToken,
   getToken,
   clearToken,
