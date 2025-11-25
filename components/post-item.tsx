@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -85,8 +87,8 @@ export default function PostItem({ post }: { post: Post }) {
               </div>
             </div>
 
-            <div className="mt-3 text-zinc-200 text-sm whitespace-pre-wrap wrap-break-word">
-              {post.content}
+            <div className="mt-3 text-zinc-200 text-sm prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
             </div>
 
             <div className="mt-4 flex items-center gap-6 text-sm text-zinc-400">

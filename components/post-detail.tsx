@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -87,7 +89,9 @@ export default function PostDetail({ id }: { id: string }) {
               </div>
             </div>
 
-            <div className="mt-4 text-zinc-200 text-lg whitespace-pre-wrap">{post.content}</div>
+            <div className="mt-4 text-zinc-200 text-lg prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
+            </div>
 
             <div className="mt-4 flex gap-4 text-sm text-zinc-400">
               <div className="flex items-center gap-2">♡ <span className="text-sm">0</span></div>
