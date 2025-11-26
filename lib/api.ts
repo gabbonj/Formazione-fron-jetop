@@ -85,9 +85,66 @@ export async function fetchPosts(params?: { limit?: number; offset?: number; use
 export async function fetchPost(id: string) {
   return request(`/api/posts/${id}`, { method: 'GET' });
 }
+// Fetch a user by id (UUID). Optionally pass a token for Authorization header.
+export async function fetchUser(id: string, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return request(`/api/users/${id}`, { method: 'GET', headers });
+}
 
-export async function fetchUser(id: string) {
-  return request(`/api/users/${id}`, { method: 'GET' });
+// Try to extract user id from a JWT token's payload (base64url decode)
+function getUserIdFromToken(token: string): string | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const payload = parts[1];
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    // atob is available in browsers; in Node this may not exist but this code runs client-side
+    const json = decodeURIComponent(
+      atob(b64)
+        .split('')
+        .map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    const obj = JSON.parse(json);
+    return (obj.sub || obj.user_id || obj.id || obj.uid) ?? null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Fetch the current authenticated user by decoding the token to get the UUID
+export async function fetchCurrentUser(token?: string) {
+  if (!token) throw { status: 401, data: 'Missing token' };
+  const id = getUserIdFromToken(token);
+  if (!id) throw { status: 400, data: 'Unable to extract user id from token' };
+  return fetchUser(id, token);
+}
+
+// Update current user profile (UserUpdate route on backend)
+// Update current user profile (UserUpdate route on backend)
+// This expects the user's id (UUID) to be provided and PATCHes /api/users/{id}
+export async function updateUser(id: string, payload: Record<string, any>, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return request(`/api/users/${id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(payload),
+  });
+}
+
+// Create a new post (requires Authorization header)
+export async function createPost(payload: { content: string }, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return request('/api/posts', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function fetchLikesCount(post_id: string) {
@@ -149,6 +206,8 @@ export default {
   fetchComments,
   fetchPosts,
   fetchPost,
+  fetchCurrentUser,
+  updateUser,
   fetchLikesCount,
   addLike,
   removeLike,
