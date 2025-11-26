@@ -147,6 +147,21 @@ export async function createPost(payload: { content: string }, token?: string) {
   });
 }
 
+// Fetch a user by username using the list endpoint with query `q`.
+export async function fetchUserByUsername(username: string) {
+  const qs = new URLSearchParams({ q: username, limit: '1' });
+  const path = `/api/users?${qs.toString()}`;
+  const res = await request(path, { method: 'GET' });
+  if (!res) return null;
+  // API may return { items: [...] } or an array
+  if (Array.isArray(res)) return res[0] || null;
+  if (Array.isArray(res.items)) return res.items[0] || null;
+  if (Array.isArray(res.data)) return res.data[0] || null;
+  // If API returned a single user object, try to detect that
+  if (res.user) return res.user;
+  return null;
+}
+
 export async function fetchLikesCount(post_id: string) {
   const qs = new URLSearchParams({ post_id, count: 'true' });
   return request(`/api/likes?${qs.toString()}`, { method: 'GET' });
@@ -208,6 +223,8 @@ export default {
   fetchPost,
   fetchCurrentUser,
   updateUser,
+  createPost,
+  fetchUserByUsername,
   fetchLikesCount,
   addLike,
   removeLike,
