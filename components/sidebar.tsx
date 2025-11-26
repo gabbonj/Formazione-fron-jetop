@@ -82,13 +82,13 @@ export default function Sidebar() {
               </Button>
             </>
           ) : (
-            // Utente autenticato: mostra link al profilo e bottone logout
+            // Utente autenticato: mostra link al profilo e bottone per creare post
             <>
               <Button asChild className="w-full rounded-full bg-[#0ea5a4] text-white hover:bg-[#0b8b88]" size="lg">
                 <Link href="/profile" onClick={() => setIsOpen(false)}>Il mio profilo</Link>
               </Button>
-              <Button onClick={() => { clearToken(); router.push('/'); setIsOpen(false); }} className="w-full rounded-full bg-black" variant="outline" size="lg">
-                Logout
+              <Button asChild className="w-full rounded-full bg-[#0081f1] text-white hover:bg-[#0062a3]" size="lg">
+                <Link href="/post" onClick={() => setIsOpen(false)}>Crea post</Link>
               </Button>
             </>
           )}
@@ -96,10 +96,23 @@ export default function Sidebar() {
       </div>
 
       <div className="pb-8">
+        {/* Logout posizionato in basso */}
+        {isAuthenticated && (
+          <div className="mt-6">
+            <Button
+              onClick={() => { clearToken(); router.push('/'); setIsOpen(false); }}
+              className="mb-4 w-full rounded-full bg-black border border-transparent text-red-600 hover:bg-red-600 hover:text-zinc-200 hover:border-red-600 transition-colors"
+              size="lg"
+            >
+              Logout
+            </Button>
+          </div>
+        )}
         <nav className="flex flex-col gap-2 text-sm text-zinc-400">
           <Link className="text-[#217FE9] hover:text-zinc-200" href="/terms" onClick={() => setIsOpen(false)}>Termini di servizio</Link>
           <Link className="text-[#217FE9] hover:text-zinc-200" href="/privacy" onClick={() => setIsOpen(false)}>Informativa sulla privacy</Link>
         </nav>
+
       </div>
     </div>
   );
