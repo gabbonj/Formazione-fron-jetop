@@ -12,6 +12,7 @@ import { fetchUser } from "@/lib/api";
 import Link from "next/link";
 import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike, getToken } from "@/lib/api";
 import CommentItem from "@/components/comment-item";
+import BackLink from "@/components/back-link";
 
 type Comment = { id: string; content: string; created_at: string; user?: { username?: string } };
 
@@ -131,14 +132,7 @@ export default function PostDetail({ id }: { id: string }) {
   return (
     <div className="w-full max-w-2xl">
       <div className="mb-6">
-        <div className="mb-4">
-          <Link href="/" className="inline-flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            Torna al feed
-          </Link>
-        </div>
+        <BackLink />
         {loading && <div className="py-6 text-zinc-400">Caricamento...</div>}
         {!loading && post && (
           <header className="mb-4">

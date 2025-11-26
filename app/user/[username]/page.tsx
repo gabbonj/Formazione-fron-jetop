@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fetchUserByUsername, fetchPosts } from "@/lib/api";
 import PostItem from "@/components/post-item";
+import BackLink from "@/components/back-link";
 
 export default function UserPage() {
   const params = useParams();
@@ -85,6 +86,7 @@ export default function UserPage() {
 
   return (
     <div className="py-8 px-4">
+      <BackLink />
       <div className="max-w-3xl mx-auto">
         <div className="bg-[#091018] border border-zinc-800 rounded-2xl p-6 shadow">
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
