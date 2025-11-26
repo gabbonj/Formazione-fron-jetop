@@ -2,11 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getToken, clearToken } from "@/lib/api";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  // Stato autenticazione
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Close mobile drawer when viewport becomes >= md (768px)
@@ -51,17 +56,42 @@ export default function Sidebar() {
     };
   }, [isOpen]);
 
+  // Leggi token da localStorage per determinare stato autenticazione
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const t = getToken();
+    setIsAuthenticated(Boolean(t));
+    const onStorage = () => setIsAuthenticated(Boolean(getToken()));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const SidebarContent = (
     <div className="flex flex-col justify-between h-full">
       <div className="pt-12">
         <h2 className="mb-6 text-3xl font-bold">Partecipa alla conversazione</h2>
         <div className="flex w-full flex-col gap-3">
-          <Button asChild className="w-full rounded-full bg-[#0081f1] text-white hover:bg-[#003865]" size="lg">
-            <Link href="/signup" onClick={() => setIsOpen(false)}>Crea account</Link>
-          </Button>
-          <Button asChild className="w-full rounded-full bg-black" variant="outline" size="lg">
-            <Link href="/login" onClick={() => setIsOpen(false)}>Accedi</Link>
-          </Button>
+          {/* Se non autenticato mostra i pulsanti di registrazione / login */}
+          {!isAuthenticated ? (
+            <>
+              <Button asChild className="w-full rounded-full bg-[#0081f1] text-white hover:bg-[#003865]" size="lg">
+                <Link href="/signup" onClick={() => setIsOpen(false)}>Crea account</Link>
+              </Button>
+              <Button asChild className="w-full rounded-full bg-black" variant="outline" size="lg">
+                <Link href="/login" onClick={() => setIsOpen(false)}>Accedi</Link>
+              </Button>
+            </>
+          ) : (
+            // Utente autenticato: mostra link al profilo e bottone logout
+            <>
+              <Button asChild className="w-full rounded-full bg-[#0ea5a4] text-white hover:bg-[#0b8b88]" size="lg">
+                <Link href="/profile" onClick={() => setIsOpen(false)}>Il mio profilo</Link>
+              </Button>
+              <Button onClick={() => { clearToken(); router.push('/'); setIsOpen(false); }} className="w-full rounded-full bg-black" variant="outline" size="lg">
+                Logout
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
