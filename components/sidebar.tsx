@@ -71,6 +71,10 @@ export default function Sidebar() {
       <div className="pt-12">
         <h2 className="mb-6 text-3xl font-bold">Partecipa alla conversazione</h2>
         <div className="flex w-full flex-col gap-3">
+          {/* Pulsante per tornare al feed */}
+          <Button asChild className="w-full rounded-full bg-transparent border border-zinc-700 text-zinc-100 hover:bg-zinc-700" variant="outline" size="lg">
+            <Link href="/" onClick={() => setIsOpen(false)}>Feed</Link>
+          </Button>
           {/* Se non autenticato mostra i pulsanti di registrazione / login */}
           {!isAuthenticated ? (
             <>

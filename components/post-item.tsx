@@ -101,27 +101,41 @@ export default function PostItem({ post }: { post: Post }) {
 
   return (
     <article className="py-4">
-      <div className="w-full bg-[#071018] border border-zinc-800 p-4 rounded-sm transition-transform transform duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-zinc-600 hover:bg-[#0b1a23]">
-        <div className="flex gap-4">
+      <div className="w-full">
+        <div className="flex gap-4 items-start">
           <div className="shrink-0">
-            <Avatar className="h-9 w-9">
+            <Avatar className="h-10 w-10">
               <AvatarFallback className="text-sm">{authorName?.[0]?.toUpperCase() ?? "G"}</AvatarFallback>
             </Avatar>
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="flex items-baseline gap-2">
-                  {authorName ? (
-                    <Link href={`/user/${authorSlug ?? ""}`} onClick={(e:any) => e.stopPropagation()} className="text-sm font-semibold text-zinc-100 hover:underline truncate">
-                      @{authorName}
-                    </Link>
-                  ) : (
-                    <span className="inline-block h-4 w-28 rounded bg-zinc-700 animate-pulse" />
-                  )}
-                  <span className="text-xs text-zinc-500">• {new Date(post.created_at).toLocaleString()}</span>
-                </div>
+                {authorName ? (
+                  <Link href={`/user/${authorSlug ?? ""}`} onClick={(e:any) => e.stopPropagation()} className="block truncate text-sm font-semibold text-zinc-100">
+                    @{authorName}
+                  </Link>
+                ) : (
+                  <div className="h-4 w-32 bg-zinc-700 animate-pulse" />
+                )}
+                <div className="mt-1 text-xs text-zinc-500">{new Date(post.created_at).toLocaleString()}</div>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm text-zinc-400">
+                <button aria-label="Like" onClick={(e) => { e.stopPropagation(); toggleLike(); }} className={`flex items-center gap-2 transition-colors ${liked ? 'text-pink-400' : 'text-zinc-300 hover:text-pink-400'}`}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                    <path d="M20.8 7.2c0 5-8.8 9.9-8.8 9.9s-8.8-4.9-8.8-9.9a4.4 4.4 0 0 1 7.8-3.1 4.4 4.4 0 0 1 7.8 3.1z" />
+                  </svg>
+                  <span className="text-sm">{likes}</span>
+                </button>
+
+                <Link href={`/post/${post.id}`} onClick={(e:any) => e.stopPropagation()} className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span className="text-sm">{commentCount}</span>
+                </Link>
               </div>
             </div>
 
@@ -132,26 +146,12 @@ export default function PostItem({ post }: { post: Post }) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") router.push(`/post/${post.id}`);
               }}
-              className="mt-3 text-zinc-200 text-sm prose prose-invert max-w-none"
+              className="mt-4 text-zinc-200 text-base leading-relaxed prose prose-invert max-w-none"
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
             </div>
 
-            <div className="mt-4 flex items-center gap-6 text-sm text-zinc-400">
-              <button aria-label="Like" onClick={(e) => { e.stopPropagation(); toggleLike(); }} className="flex items-center gap-2 text-zinc-300 hover:text-pink-400">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
-                  <path d="M20.8 7.2c0 5-8.8 9.9-8.8 9.9s-8.8-4.9-8.8-9.9a4.4 4.4 0 0 1 7.8-3.1 4.4 4.4 0 0 1 7.8 3.1z" />
-                </svg>
-                <span className="text-sm">{likes}</span>
-              </button>
-
-              <Link href={`/post/${post.id}`} onClick={(e:any) => e.stopPropagation()} className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <span className="text-sm">{commentCount}</span>
-              </Link>
-            </div>
+            <div className="mt-4 border-b border-zinc-800" />
           </div>
         </div>
       </div>
