@@ -45,7 +45,7 @@ export default function LoginCard() {
     setLoading(true);
     setError(null);
     try {
-      const res: any = await verifyOtp({ temp_token: tempToken, otp_token: otp });
+      const res: any = await verifyOtp({ temp_token: tempToken, secret: otp });
       if (res?.token) {
         saveToken(res.token);
         router.push("/");
