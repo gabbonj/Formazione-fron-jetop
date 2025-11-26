@@ -115,14 +115,12 @@ export default function UserPage() {
           )}
 
           <div className="mt-6 flex items-center gap-3">
-            <Link href={`/user/${user.username}/posts`} className="text-sm text-[#1da1f2] hover:underline">Visualizza tutti i post</Link>
-            <span className="text-sm text-zinc-500">•</span>
-            <div className="text-sm text-zinc-400">{posts.length} post pubblici</div>
           </div>
         </div>
 
         <section className="mt-6">
-          <h2 className="text-lg font-semibold mb-4">Ultimi post</h2>
+
+          <h2 className="text-lg font-semibold mb-4">{posts.length} post pubblici:</h2>
           {posts.length === 0 ? (
             <div className="text-zinc-500">Nessun post pubblico trovato.</div>
           ) : (

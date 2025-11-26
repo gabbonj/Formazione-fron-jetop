@@ -123,7 +123,8 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
+      <Button
+        variant="ghost"
         className="md:hidden fixed top-6 left-6 z-40 p-2 rounded-md bg-[#0b0f13] border border-zinc-700 text-zinc-100"
         onClick={() => setIsOpen(true)}
         aria-label="Apri menu"
@@ -131,7 +132,7 @@ export default function Sidebar() {
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M3 12h18M3 6h18M3 18h18" />
         </svg>
-      </button>
+      </Button>
 
       <aside className="hidden md:fixed md:left-10 md:top-0 md:h-screen md:w-80 md:flex md:flex-col md:justify-between md:border-r md:border-zinc-800/60 md:pr-8 md:bg-[#0b0f13] md:z-20">
         {SidebarContent}
@@ -143,11 +144,11 @@ export default function Sidebar() {
           onClick={() => setIsOpen(false)}
         />
         <aside className={`relative w-80 max-w-[80%] h-full bg-[#0b0f13] p-6 shadow-xl overflow-y-auto transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-          <button className="absolute top-4 right-4 text-zinc-300" onClick={() => setIsOpen(false)} aria-label="Chiudi menu">
+          <Button variant="ghost" className="absolute top-4 right-4 text-zinc-300" onClick={() => setIsOpen(false)} aria-label="Chiudi menu">
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </Button>
           {SidebarContent}
         </aside>
       </div>

@@ -100,8 +100,16 @@ export default function PostItem({ post }: { post: Post }) {
   }
 
   return (
-    <article className="py-4">
-      <div className="w-full">
+    <article
+      className="py-0 group cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(`/post/${post.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") router.push(`/post/${post.id}`);
+      }}
+    >
+      <div className="p-4 w-full rounded-md group-hover:bg-[#071a21] transition-colors">
         <div className="flex gap-4 items-start">
           <div className="shrink-0">
             <Avatar className="h-10 w-10">
@@ -123,12 +131,12 @@ export default function PostItem({ post }: { post: Post }) {
               </div>
 
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <button aria-label="Like" onClick={(e) => { e.stopPropagation(); toggleLike(); }} className={`flex items-center gap-2 transition-colors ${liked ? 'text-pink-400' : 'text-zinc-300 hover:text-pink-400'}`}>
+                <Button aria-label="Like" onClick={(e) => { e.stopPropagation(); toggleLike(); }} variant="ghost" className={`flex items-center gap-2 transition-colors ${liked ? 'text-pink-400' : 'text-zinc-300 hover:text-pink-400'}`}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
                     <path d="M20.8 7.2c0 5-8.8 9.9-8.8 9.9s-8.8-4.9-8.8-9.9a4.4 4.4 0 0 1 7.8-3.1 4.4 4.4 0 0 1 7.8 3.1z" />
                   </svg>
                   <span className="text-sm">{likes}</span>
-                </button>
+                </Button>
 
                 <Link href={`/post/${post.id}`} onClick={(e:any) => e.stopPropagation()} className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
@@ -139,22 +147,15 @@ export default function PostItem({ post }: { post: Post }) {
               </div>
             </div>
 
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => router.push(`/post/${post.id}`)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") router.push(`/post/${post.id}`);
-              }}
-              className="mt-4 text-zinc-200 text-base leading-relaxed prose prose-invert max-w-none"
-            >
+            <div className="mt-4 text-zinc-200 text-base leading-relaxed prose prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
             </div>
 
-            <div className="mt-4 border-b border-zinc-800" />
           </div>
         </div>
       </div>
+      <div className="mt-4 border-b border-zinc-800" />
+
     </article>
   );
 }

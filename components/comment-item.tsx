@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 
@@ -56,9 +57,11 @@ export default function CommentItem({ comment }: { comment: any }) {
           <span className="text-xs text-zinc-500">{new Date(comment.created_at).toLocaleString()}</span>
         </div>
 
-        <div className="mt-2 rounded-md bg-[#06121a] p-4 text-zinc-200 text-sm prose prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content || ""}</ReactMarkdown>
-        </div>
+        <Card className="mt-2 rounded-md bg-[#06121a] p-0 border border-zinc-800">
+          <CardContent className="p-4 text-zinc-200 text-sm prose prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content || ""}</ReactMarkdown>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,5 +1,44 @@
 "use client"
 
+/**
+ * InputGroup and related subcomponents
+ *
+ * The `InputGroup` family provides a flexible container for combining an
+ * input or textarea with addons, buttons or text. It is useful for search
+ * bars, inputs with leading/trailing icons, or inputs with inline actions.
+ *
+ * Exported components:
+ * - `InputGroup`: wrapper element that manages layout and states
+ * - `InputGroupInput`: an `Input` adapted to the group (fills available space)
+ * - `InputGroupTextarea`: a `Textarea` adapted to the group
+ * - `InputGroupAddon`: a non-interactive or focus-targeting addon (icon/text)
+ * - `InputGroupButton`: a `Button` styled for placement inside the group
+ * - `InputGroupText`: simple text wrapper for addons
+ *
+ * Example:
+ *
+ * import {
+ *   InputGroup,
+ *   InputGroupAddon,
+ *   InputGroupButton,
+ *   InputGroupInput,
+ * } from "@/components/ui/input-group"
+ *
+ * <InputGroup>
+ *   <InputGroupInput placeholder="Search..." />
+ *   <InputGroupAddon>
+ *     <SearchIcon />
+ *   </InputGroupAddon>
+ *   <InputGroupAddon align="inline-end">
+ *     <InputGroupButton>Search</InputGroupButton>
+ *   </InputGroupAddon>
+ * </InputGroup>
+ *
+ * Notes:
+ * - Addons forward clicks to the control (focuses the input when clicked).
+ * - Align variants (`inline-start`, `inline-end`, `block-start`, `block-end`)
+ *   control placement and responsive behaviour.
+ */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 

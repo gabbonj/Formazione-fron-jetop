@@ -1,5 +1,39 @@
 "use client"
 
+/**
+ * Form utilities for react-hook-form integration.
+ *
+ * This file exports a small set of helpers that wrap `react-hook-form` primitives
+ * and adapt them to the design system used in this project:
+ *
+ * - `Form` is a re-export of `FormProvider`.
+ * - `FormField` wires `Controller` into a context so child components can access
+ *   the current field state (error, touched, etc.).
+ * - `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`
+ *   provide slot-based building blocks to compose accessible form fields.
+ *
+ * Example usage (with `useForm` from react-hook-form):
+ *
+ * const form = useForm()
+ *
+ * <FormField
+ *   control={form.control}
+ *   name="username"
+ *   render={({ field }) => (
+ *     <FormItem>
+ *       <FormLabel>Username</FormLabel>
+ *       <FormControl>
+ *         <Input placeholder="shadcn" {...field} />
+ *       </FormControl>
+ *       <FormDescription>This is your public display name.</FormDescription>
+ *       <FormMessage />
+ *     </FormItem>
+ *   )}
+ * />
+ *
+ * These helpers keep markup consistent with the design tokens and ensure
+ * accessible ids/aria attributes are automatically generated and wired.
+ */
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"

@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 import Link from "next/link";
@@ -138,15 +140,15 @@ export default function PostDetail({ id }: { id: string }) {
       </div>
 
       <div className="border-t border-zinc-800 pt-6">
-        <textarea
+        <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Scrivi un commento..."
-          className="w-full resize-none rounded-md border border-zinc-800 bg-[#06121a] p-3 text-zinc-100"
+          className="w-full resize-none rounded-md bg-[#06121a] p-3 text-zinc-100 border border-zinc-800"
           rows={4}
         />
         <div className="flex justify-end mt-3">
-          <button onClick={submitComment} className="rounded-md bg-[#0b66b0] px-4 py-2 text-white">Commenta</button>
+          <Button onClick={submitComment} className="rounded-md bg-[#0b66b0] px-4 py-2 text-white">Commenta</Button>
         </div>
       </div>
 
