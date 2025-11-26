@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 import Link from "next/link";
-import { fetchPost, fetchComments, createComment } from "@/lib/api";
-import { getToken } from "@/lib/api";
+import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike, getToken } from "@/lib/api";
 import CommentItem from "@/components/comment-item";
 
 type Comment = { id: string; content: string; created_at: string; user?: { username?: string } };
@@ -25,6 +24,8 @@ export default function PostDetail({ id }: { id: string }) {
     return s && !isLikelyId(s) ? s : "";
   });
   const [comments, setComments] = useState<Comment[]>([]);
+  const [likes, setLikes] = useState<number>(0);
+  const [liked, setLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const router = useRouter();
@@ -46,6 +47,16 @@ export default function PostDetail({ id }: { id: string }) {
       // if no post data, try to take from first comment's post
       if (!post && items.length > 0 && (items[0] as any).post) {
         setPost((items as any)[0].post);
+      }
+      // fetch likes count (API may return count or object)
+      try {
+        const l = await fetchLikesCount(id);
+        if (l == null) setLikes(0);
+        else if (typeof l.count === 'number') setLikes(l.count);
+        else if (typeof l === 'number') setLikes(l);
+        else if (Array.isArray(l.items)) setLikes(l.items.length);
+      } catch (e) {
+        // ignore likes errors
       }
     } catch (e) {
       console.error(e);
@@ -99,6 +110,24 @@ export default function PostDetail({ id }: { id: string }) {
     }
   }
 
+  async function toggleLike() {
+    const token = getToken();
+    try {
+      if (!liked) {
+        await addLike(id, token || undefined);
+        setLikes((n) => n + 1);
+        setLiked(true);
+      } else {
+        await removeLike(id, token || undefined);
+        setLikes((n) => Math.max(0, n - 1));
+        setLiked(false);
+      }
+    } catch (e: any) {
+      if (e?.status === 401) router.push('/login');
+      else console.error(e);
+    }
+  }
+
   return (
     <div className="w-full max-w-2xl">
       <div className="mb-6">
@@ -128,7 +157,17 @@ export default function PostDetail({ id }: { id: string }) {
             </div>
 
             <div className="mt-4 flex gap-4 text-sm text-zinc-400">
-              <div className="flex items-center gap-2">♡ <span className="text-sm">0</span></div>
+              <Button
+                aria-label="Like"
+                onClick={(e) => { e.stopPropagation(); toggleLike(); }}
+                variant="ghost"
+                className={`flex items-center gap-2 ${liked ? 'text-pink-400' : 'text-zinc-300 hover:text-pink-400'}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                  <path d="M20.8 7.2c0 5-8.8 9.9-8.8 9.9s-8.8-4.9-8.8-9.9a4.4 4.4 0 0 1 7.8-3.1 4.4 4.4 0 0 1 7.8 3.1z" />
+                </svg>
+                <span className="text-sm">{likes}</span>
+              </Button>
+
               <div className="flex items-center gap-2">💬 <span className="text-sm">{comments.length}</span></div>
             </div>
           </header>
