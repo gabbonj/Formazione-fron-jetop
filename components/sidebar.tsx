@@ -4,14 +4,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getToken, clearToken } from "@/lib/api";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  // Stato autenticazione
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
   useEffect(() => {
     // Close mobile drawer when viewport becomes >= md (768px)
@@ -56,15 +56,7 @@ export default function Sidebar() {
     };
   }, [isOpen]);
 
-  // Leggi token da localStorage per determinare stato autenticazione
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const t = getToken();
-    setIsAuthenticated(Boolean(t));
-    const onStorage = () => setIsAuthenticated(Boolean(getToken()));
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  // no-op: authentication state is derived from next-auth `useSession`
 
   const SidebarContent = (
     <div className="flex flex-col justify-between h-full">
@@ -102,9 +94,9 @@ export default function Sidebar() {
       <div className="pb-8">
         {/* Logout posizionato in basso */}
         {isAuthenticated && (
-          <div className="mt-6">
+            <div className="mt-6">
             <Button
-              onClick={() => { clearToken(); router.push('/'); setIsOpen(false); }}
+              onClick={() => { setIsOpen(false); signOut({ callbackUrl: '/' }); }}
               className="mb-4 w-full rounded-full bg-black border border-transparent text-red-600 hover:bg-red-600 hover:text-zinc-200 hover:border-red-600 transition-colors"
               size="lg"
             >

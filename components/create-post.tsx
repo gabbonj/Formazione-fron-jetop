@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getToken, createPost } from "@/lib/api";
+import { createPost } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 export default function CreatePost() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function CreatePost() {
     if (!content.trim()) return setError('Inserisci il contenuto del post');
     setLoading(true);
     try {
-      const token = getToken();
+      const token = (session as any)?.token;
       if (!token) {
         router.push('/login');
         return;
@@ -62,10 +64,6 @@ export default function CreatePost() {
           </div>
         </form>
       </div>
-
-      <div className="mt-6 text-center text-sm text-zinc-500">
-        <p>Rispetta le regole della community. I post possono essere modificati o rimossi dagli amministratori.</p>
-      </div>
     </div>
   );
-}
+  }

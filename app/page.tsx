@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { fetchPosts, getToken } from "@/lib/api";
+import { fetchPosts } from "@/lib/api";
+import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostItem from "@/components/post-item";
@@ -19,10 +20,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuth, setIsAuth] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     setLoading(true);
-    setIsAuth(Boolean(getToken()));
+    setIsAuth(status === 'authenticated');
     fetchPosts()
       .then((res: any) => {
         // API may return { items: [...] } or array
@@ -37,7 +39,7 @@ export default function Home() {
         setError(String(err));
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [status]);
 
   return (
     <div className="min-h-screen bg-[#0b0f13] text-zinc-100">

@@ -5,7 +5,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { fetchLikesCount, addLike, removeLike, getToken, fetchCommentsCount, fetchUser } from "@/lib/api";
+import { fetchLikesCount, addLike, removeLike, fetchCommentsCount, fetchUser } from "@/lib/api";
+import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export default function PostItem({ post }: { post: Post }) {
     return s && !isLikelyId(s) ? s : "";
   });
   const router = useRouter();
+  const { data: session } = useSession();
 
   useEffect(() => {
     let mounted = true;
@@ -52,6 +54,7 @@ export default function PostItem({ post }: { post: Post }) {
 
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
   useEffect(() => {
     let mounted = true;
     fetchLikesCount(post.id)
@@ -62,11 +65,48 @@ export default function PostItem({ post }: { post: Post }) {
         if (typeof res.count === 'number') setLikes(res.count);
         else if (Array.isArray(res.items)) setLikes(res.items.length);
         else if (typeof res === 'number') setLikes(res);
+        // if API returned items, try to detect if current user is among them
+        try {
+          if (Array.isArray(res.items) && (session as any)?.token) {
+            // decode token to extract user id
+            const t = (session as any).token as string;
+            let uid: string | null = null;
+            try {
+              const parts = t.split('.');
+              if (parts.length >= 2) {
+                const payload = parts[1];
+                const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+                const json = decodeURIComponent(
+                  atob(b64)
+                    .split('')
+                    .map(function (c) {
+                      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    })
+                    .join('')
+                );
+                const obj = JSON.parse(json);
+                uid = obj.sub || obj.user_id || obj.id || obj.uid || null;
+              }
+            } catch (er) {
+              uid = null;
+            }
+
+            if (uid) {
+              const found = res.items.some((it: any) => {
+                const candidate = String(it?.user_id ?? it?.user?.id ?? it?.user ?? it?.id ?? it);
+                return candidate === String(uid);
+              });
+              setLiked(Boolean(found));
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
       })
       .catch(() => {})
       .finally(() => {});
     return () => { mounted = false; };
-  }, [post.id]);
+  }, [post.id, session]);
 
   const [commentCount, setCommentCount] = useState(0);
   useEffect(() => {
@@ -82,20 +122,27 @@ export default function PostItem({ post }: { post: Post }) {
   }, [post.id]);
 
   async function toggleLike() {
-    const token = getToken();
+    if (likeLoading) return;
+    setLikeLoading(true);
     try {
+      // retrieve token from next-auth session on the client
+      // we access via hook inside component scope
+      // but here we can't call hook, so read from window.__NEXT_AUTH_SESSION__ if available
+      const t = (session as any)?.token ?? undefined;
       if (!liked) {
-        await addLike(post.id, token || undefined);
+        await addLike(post.id, t || undefined);
         setLikes((n) => n + 1);
         setLiked(true);
       } else {
-        await removeLike(post.id, token || undefined);
+        await removeLike(post.id, t || undefined);
         setLikes((n) => Math.max(0, n - 1));
         setLiked(false);
       }
     } catch (e) {
       // if unauthorized, redirect to login could be handled elsewhere; for now log
       console.error(e);
+    } finally {
+      setLikeLoading(false);
     }
   }
 

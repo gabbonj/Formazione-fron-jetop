@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getToken, fetchCurrentUser, updateUser } from "@/lib/api";
+import { fetchCurrentUser, updateUser } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 export default function ProfileForm() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function ProfileForm() {
       setLoading(true);
       setError(null);
       try {
-        const token = getToken();
+        const token = (session as any)?.token;
         if (!token) {
           router.push('/login');
           return;
@@ -50,13 +52,14 @@ export default function ProfileForm() {
     load();
   }, [router]);
 
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError(null);
     setSuccess(null);
     try {
-      const token = getToken();
+      const token = (session as any)?.token;
       if (!token) return setError('Devi essere autenticato');
 
       if (!userId) return setError('Impossibile determinare l\'utente');

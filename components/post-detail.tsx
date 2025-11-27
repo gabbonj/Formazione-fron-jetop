@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike, getToken } from "@/lib/api";
+import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike } from "@/lib/api";
 import CommentItem from "@/components/comment-item";
 import BackLink from "@/components/back-link";
 
@@ -30,6 +31,7 @@ export default function PostDetail({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const router = useRouter();
+  const { data: session } = useSession();
 
   async function load() {
     setLoading(true);
@@ -68,7 +70,7 @@ export default function PostDetail({ id }: { id: string }) {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, session]);
 
   useEffect(() => {
     let mounted = true;
@@ -97,7 +99,7 @@ export default function PostDetail({ id }: { id: string }) {
   async function submitComment() {
     if (!text.trim()) return;
     try {
-      const token = getToken();
+      const token = (session as any)?.token;
       await createComment({ post_id: id, content: text }, token || undefined);
       setText("");
       await load();
@@ -112,7 +114,7 @@ export default function PostDetail({ id }: { id: string }) {
   }
 
   async function toggleLike() {
-    const token = getToken();
+    const token = (session as any)?.token;
     try {
       if (!liked) {
         await addLike(id, token || undefined);

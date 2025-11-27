@@ -7,7 +7,8 @@ import AuthCard from "@/components/auth-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { loginStep1, verifyOtp, saveToken } from "@/lib/api";
+import { loginStep1, verifyOtp } from "@/lib/api";
+import { signIn } from "next-auth/react";
 
 export default function LoginCard() {
   const router = useRouter();
@@ -27,8 +28,10 @@ export default function LoginCard() {
       if (res?.requires_otp && res?.temp_token) {
         setTempToken(res.temp_token);
       } else if (res?.token) {
-        saveToken(res.token);
-        router.push("/");
+        // Sign in into next-auth session by passing the token to the credentials provider
+        const result = await signIn('credentials', { token: res.token, redirect: false });
+        if (result && (result as any).ok) router.push('/');
+        else setError('Impossibile creare la sessione');
       } else {
         setError("Risposta imprevista dal server");
       }
@@ -45,10 +48,11 @@ export default function LoginCard() {
     setLoading(true);
     setError(null);
     try {
-      const res: any = await verifyOtp({ temp_token: tempToken, secret: otp });
+      const res: any = await verifyOtp({ temp_token: tempToken, otp_token: otp });
       if (res?.token) {
-        saveToken(res.token);
-        router.push("/");
+        const result = await signIn('credentials', { token: res.token, redirect: false });
+        if (result && (result as any).ok) router.push('/');
+        else setError('Impossibile creare la sessione');
       } else {
         setError("OTP non valido o risposta imprevista");
       }
@@ -70,12 +74,12 @@ export default function LoginCard() {
         <form onSubmit={handleStep1} className="space-y-4">
           <div>
             <Label className="text-zinc-300">Username</Label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900" required />
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
           </div>
 
           <div>
             <Label className="text-zinc-300">Password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-zinc-900" required />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
           </div>
 
           <div className="mt-6">
@@ -90,7 +94,7 @@ export default function LoginCard() {
 
           <div>
             <Label className="text-zinc-300">OTP</Label>
-            <Input value={otp} onChange={(e) => setOtp(e.target.value)} className="mt-1 bg-zinc-900" required />
+            <Input value={otp} onChange={(e) => setOtp(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
           </div>
 
           <div className="mt-6 flex items-center gap-3">

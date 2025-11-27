@@ -39,7 +39,7 @@ export async function loginStep1(payload: { username: string; password: string }
   });
 }
 
-export async function verifyOtp(payload: { temp_token: string; secret: string }) {
+export async function verifyOtp(payload: { temp_token: string; otp_token: string }) {
   return request('/api/auth/verify-otp', {
     method: 'POST',
     body: JSON.stringify(payload),

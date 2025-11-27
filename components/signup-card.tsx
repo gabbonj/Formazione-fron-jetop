@@ -7,7 +7,8 @@ import AuthCard from "@/components/auth-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { register, saveToken } from "@/lib/api";
+import { register } from "@/lib/api";
+import { signIn } from "next-auth/react";
 
 export default function SignupCard() {
   const router = useRouter();
@@ -26,8 +27,9 @@ export default function SignupCard() {
     try {
       const res: any = await register({ username, email, password });
       if (res?.token) {
-        saveToken(res.token);
-        router.push("/");
+        const result = await signIn('credentials', { token: res.token, redirect: false });
+        if (result && (result as any).ok) router.push('/');
+        else setError('Impossibile creare la sessione');
       } else {
         setError("Registrazione completata ma nessun token ricevuto");
       }
@@ -48,22 +50,22 @@ export default function SignupCard() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label className="text-zinc-300">Username</Label>
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900" required />
+          <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
         </div>
 
         <div>
           <Label className="text-zinc-300">Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-zinc-900" required />
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
         </div>
 
         <div>
           <Label className="text-zinc-300">Password</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-zinc-900" required />
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
         </div>
 
         <div>
           <Label className="text-zinc-300">Conferma Password</Label>
-          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1 bg-zinc-900" required />
+          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
         </div>
 
         <div className="mt-6">
