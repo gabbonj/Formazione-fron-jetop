@@ -2,17 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import AuthCard from "@/components/auth-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { register } from "@/lib/api";
 import { formatError } from "@/lib/utils";
-import { signIn } from "next-auth/react";
 
 export default function SignupCard() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +17,7 @@ export default function SignupCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +38,8 @@ export default function SignupCard() {
         if (!obj || typeof obj !== 'object') return null;
         const keys = Object.keys(obj);
         for (const k of keys) {
-          if (/^(otp|otp_code|code|secret|two_factor_code)$/i.test(k) && obj[k]) return String(obj[k]);
+          // match common OTP/secret field names, including `otp_secret`
+          if (/(otp_secret|otp_code|otp|secret|two_factor_code|code)/i.test(k) && obj[k]) return String(obj[k]);
         }
         // check nested objects one level deep
         for (const k of keys) {
@@ -56,17 +55,13 @@ export default function SignupCard() {
       const code = findOtp(res);
       if (code) {
         setOtpCode(String(code));
+        setSuccess(true);
         setLoading(false);
         return;
       }
 
-      if (res?.token) {
-        const result = await signIn('credentials', { token: res.token, redirect: false });
-        if (result && (result as any).ok) router.push('/');
-        else setError('Impossibile creare la sessione');
-      } else {
-        setError("Registrazione completata ma nessun token ricevuto");
-      }
+      // Se non c'è OTP, mostriamo comunque una pagina di successo
+      setSuccess(true);
     } catch (err: unknown) {
       setError(formatError(err));
     } finally {
@@ -89,6 +84,17 @@ export default function SignupCard() {
             <div className="mt-2 text-sm text-zinc-400">Salva questo codice: potresti averne bisogno per configurare l'autenticazione a due fattori.</div>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(otpCode); }} className="mx-auto">Copia codice</Button>
+              <Link href="/login" className="ml-auto text-[#1da1f2] hover:underline">Vai al login</Link>
+            </div>
+          </div>
+        </div>
+      ) : success ? (
+        <div className="space-y-4">
+          <div className="text-center text-sm text-zinc-400">Registrazione completata con successo.</div>
+          <div className="mx-auto max-w-sm rounded-md border border-zinc-700 bg-[#071018] p-4 text-center">
+            <div className="text-lg font-semibold text-zinc-100">Controlla la tua email per confermare l'account.</div>
+            <div className="mt-2 text-sm text-zinc-400">Ora puoi effettuare il login per accedere al tuo profilo.</div>
+            <div className="mt-4 flex gap-2">
               <Link href="/login" className="ml-auto text-[#1da1f2] hover:underline">Vai al login</Link>
             </div>
           </div>
