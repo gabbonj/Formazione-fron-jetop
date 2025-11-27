@@ -49,3 +49,35 @@ export function isLikelyId(value: string | null | undefined): boolean {
   if (/^[0-9a-f]{6,32}$/i.test(value) && value.length >= 8) return true;
   return false;
 }
+
+export function formatError(err: unknown): string {
+  if (!err) return String(err);
+  // If it's already a string
+  if (typeof err === 'string') return err;
+  // If it's an Error instance
+  if (err instanceof Error) return err.message;
+
+  // If it's an object thrown by lib/api (e.g. { status, data }) try to extract useful info
+  try {
+    const anyErr: any = err as any;
+    if (anyErr.data) {
+      // data may be string or object
+      if (typeof anyErr.data === 'string') return anyErr.data;
+      if (typeof anyErr.data === 'object') {
+        if (anyErr.data.message) return String(anyErr.data.message);
+        // try common fields
+        if (anyErr.data.error) return String(anyErr.data.error);
+        try {
+          return JSON.stringify(anyErr.data);
+        } catch (e) {
+          // fallthrough
+        }
+      }
+    }
+    if (anyErr.message) return String(anyErr.message);
+    // as fallback try to stringify
+    return JSON.stringify(anyErr);
+  } catch (e) {
+    return String(err);
+  }
+}

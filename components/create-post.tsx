@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createPost } from "@/lib/api";
+import { formatError } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 
 export default function CreatePost() {
@@ -36,7 +37,7 @@ export default function CreatePost() {
         router.push('/');
       }
     } catch (err: unknown) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,7 @@ export default function CreatePost() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="bg-[#091018] border border-zinc-800 rounded-2xl p-8 shadow-lg">
-        <h2 className="text-2xl font-semibold">Crea un nuovo post</h2>
+        <h2 className="text-2xl font-semibold text-zinc-100">Crea un nuovo post</h2>
         <p className="text-sm text-zinc-400 mt-1">Condividi qualcosa con la comunità — sii conciso e chiaro.</p>
 
         <form onSubmit={handleSubmit} className="mt-6">
@@ -53,8 +54,8 @@ export default function CreatePost() {
 
           <div>
             <Label className="text-zinc-300">Contenuto</Label>
-            <Textarea value={content} onChange={(e) => setContent(e.target.value)} className="mt-1 bg-zinc-900" rows={6} />
-            <div className="mt-2 text-xs text-zinc-500">{content.length} caratteri</div>
+            <Textarea value={content} onChange={(e) => setContent(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" rows={6} />
+            <div className="mt-2 text-xs text-zinc-400">{content.length} caratteri</div>
           </div>
 
           <div className="mt-6 flex justify-end">

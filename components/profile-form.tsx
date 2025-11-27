@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { fetchCurrentUser, updateUser } from "@/lib/api";
+import { formatError } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 
 export default function ProfileForm() {
@@ -43,7 +44,7 @@ export default function ProfileForm() {
         setBio(user?.bio || "");
         setAvatarUrl(user?.avatar_url || user?.avatar || null);
       } catch (err: unknown) {
-        setError(String(err));
+        setError(formatError(err));
       } finally {
         setLoading(false);
       }
@@ -75,7 +76,7 @@ export default function ProfileForm() {
       // optionally refresh or navigate
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,7 @@ export default function ProfileForm() {
               )}
             </Avatar>
             <div>
-              <h3 className="text-2xl font-semibold">Modifica profilo</h3>
+              <h3 className="text-2xl font-semibold text-zinc-100">Modifica profilo</h3>
               <p className="text-sm text-zinc-400">Aggiorna le informazioni del tuo account</p>
             </div>
           </div>
@@ -108,18 +109,18 @@ export default function ProfileForm() {
 
           <div>
             <Label className="text-zinc-300">Username</Label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900" required />
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
           </div>
 
           <div>
             <Label className="text-zinc-300">Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-zinc-900" required />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" required />
           </div>
 
           <div className="md:col-span-2">
             <Label className="text-zinc-300">Bio</Label>
-            <Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1 bg-zinc-900" rows={4} />
-            <p className="mt-2 text-sm text-zinc-500">Una breve descrizione che verrà mostrata sul tuo profilo (max 160 caratteri).</p>
+            <Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500" rows={4} />
+            <p className="mt-2 text-sm text-zinc-400">Una breve descrizione che verrà mostrata sul tuo profilo (max 160 caratteri).</p>
           </div>
 
           <div className="md:col-span-2 flex justify-end">
@@ -128,10 +129,6 @@ export default function ProfileForm() {
             </Button>
           </div>
         </form>
-      </div>
-
-      <div className="mt-6 text-center text-sm text-zinc-500">
-        <p>Puoi aggiornare il tuo username, email e bio. Per cambiare avatar contatta il supporto o usa il tuo profilo esterno.</p>
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ export default function AuthCard({ title, subtitle, error = null, footer = null,
             </div>
           </CardHeader>
 
-          <CardContent className="pt-6">
+          <CardContent className="pt-0">
             {error && (
               <div className="mb-4 rounded-md bg-red-900/30 px-3 py-2 text-center text-sm text-red-300">{error}</div>
             )}

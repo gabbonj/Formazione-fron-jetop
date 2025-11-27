@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { loginStep1, verifyOtp } from "@/lib/api";
+import { formatError } from "@/lib/utils";
 import { signIn } from "next-auth/react";
 
 export default function LoginCard() {
@@ -36,7 +37,7 @@ export default function LoginCard() {
         setError("Risposta imprevista dal server");
       }
     } catch (err: unknown) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ export default function LoginCard() {
         setError("OTP non valido o risposta imprevista");
       }
     } catch (err: unknown) {
-      setError(String(err));
+      setError(formatError(err));
     } finally {
       setLoading(false);
     }
