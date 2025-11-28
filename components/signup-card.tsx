@@ -80,8 +80,8 @@ export default function SignupCard() {
         <div className="space-y-4">
           <div className="text-center text-sm text-zinc-400">Registrazione completata con successo. Ecco il codice OTP da usare con Google Authenticator:</div>
           <div className="mx-auto max-w-sm rounded-md border border-zinc-700 bg-[#071018] p-4 text-center">
-            <div className="text-2xl font-mono font-semibold text-zinc-100">{otpCode}</div>
-            <div className="mt-2 text-sm text-zinc-400">Salva questo codice: potresti averne bisogno per configurare l'autenticazione a due fattori.</div>
+            <div className="text-xs md:text-base wrap-anywhere font-mono font-semibold text-zinc-100">{otpCode}</div>
+            <div className="mt-2 text-zinc-400">Salva questo codice: potresti averne bisogno per configurare l'autenticazione a due fattori.</div>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(otpCode); }} className="mx-auto">Copia codice</Button>
               <Link href="/login" className="ml-auto text-[#1da1f2] hover:underline">Vai al login</Link>
