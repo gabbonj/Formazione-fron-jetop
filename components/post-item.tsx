@@ -184,7 +184,7 @@ export default function PostItem({ post, onUpdated, onDeleted }: Props) {
         if (e.key === "Enter") router.push(`/post/${post.id}`);
       }}
     >
-      <div className="p-4 w-full rounded-md group-hover:bg-[#071a21] transition-colors">
+      <div className="relative p-4 w-full rounded-md group-hover:bg-[#071a21] transition-colors">
         <div className="flex gap-4 items-start">
           <div className="shrink-0">
             <Avatar className="h-10 w-10">
@@ -223,27 +223,7 @@ export default function PostItem({ post, onUpdated, onDeleted }: Props) {
                   </svg>
                   <span className="text-sm">{commentCount}</span>
                 </Link>
-                {isOwner && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      aria-label="Modifica"
-                      variant="ghost"
-                      className="text-zinc-300 hover:text-white"
-                      onClick={(e) => { e.stopPropagation(); setActionError(null); setEditing(true); setEditText(content || ""); }}
-                    >
-                      ✏️
-                    </Button>
-                    <Button
-                      aria-label="Elimina"
-                      variant="ghost"
-                      className="text-red-400 hover:text-red-300"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                    >
-                      🗑️
-                    </Button>
-                  </div>
-                )}
+                {/* owner actions moved to bottom-right */}
               </div>
             </div>
 
@@ -255,6 +235,37 @@ export default function PostItem({ post, onUpdated, onDeleted }: Props) {
 
           </div>
         </div>
+        {/* Owner-specific action buttons absolutely positioned bottom-right */}
+        {isOwner && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-2 z-10">
+            <Button
+              aria-label="Modifica"
+              variant="ghost"
+              className="text-zinc-300 hover:text-white p-1"
+              onClick={(e) => { e.stopPropagation(); setActionError(null); setEditing(true); setEditText(content || ""); }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" />
+                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+              </svg>
+            </Button>
+            <Button
+              aria-label="Elimina"
+              variant="ghost"
+              className="text-red-400 hover:text-red-300 p-1"
+              onClick={(e) => { e.stopPropagation(); handleDelete(e); }}
+              disabled={deleting}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
+            </Button>
+          </div>
+        )}
       </div>
       <div className="mt-4 border-b border-zinc-800" />
 
