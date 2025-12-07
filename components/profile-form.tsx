@@ -13,7 +13,7 @@ import { useSession } from "next-auth/react";
 
 export default function ProfileForm() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +27,13 @@ export default function ProfileForm() {
 
   useEffect(() => {
     async function load() {
+      // Don't load if session is still loading or doesn't exist
+      if (status === 'loading') return;
+      if (status === 'unauthenticated') {
+        router.push('/login');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -51,7 +58,7 @@ export default function ProfileForm() {
     }
 
     load();
-  }, [router]);
+  }, [router, session, status]);
 
 
   async function handleSave(e: React.FormEvent) {
