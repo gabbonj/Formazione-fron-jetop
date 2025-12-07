@@ -1,4 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.twitter.server.jetop.com';
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
 async function request(path: string, options: RequestInit = {}) {
   const url = `${API_BASE}${path}`;
@@ -109,7 +109,7 @@ function getUserIdFromToken(token: string): string | null {
         .join('')
     );
     const obj = JSON.parse(json);
-    return (obj.sub || obj.user_id || obj.id || obj.uid) ?? null;
+    return (obj.userId || obj.sub || obj.user_id || obj.id || obj.uid) ?? null;
   } catch (e) {
     return null;
   }
