@@ -82,6 +82,15 @@ export async function fetchPosts(params?: { limit?: number; offset?: number; use
   return request(path, { method: 'GET' });
 }
 
+// Count posts authored by a user by leveraging the posts list endpoint (which returns an exact count)
+export async function fetchPostsCountByUser(user_id: string) {
+  const res = await fetchPosts({ user_id, limit: 1, offset: 0 });
+  if (res && typeof (res as any).count === 'number') return (res as any).count as number;
+  if (Array.isArray((res as any)?.items)) return (res as any).items.length;
+  if (Array.isArray(res)) return res.length;
+  return 0;
+}
+
 export async function fetchPost(id: string) {
   return request(`/api/posts/${id}`, { method: 'GET' });
 }
@@ -220,6 +229,36 @@ export async function fetchLikesCountByUser(user_id: string) {
   return 0;
 }
 
+// Count how many comments a user has written by paging through the comments list endpoint
+export async function fetchCommentsCountByUser(user_id: string) {
+  const limit = 100;
+  let offset = 0;
+  let total = Number.POSITIVE_INFINITY;
+  let totalForUser = 0;
+
+  while (offset < total) {
+    const qs = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const res = await request(`/api/comments?${qs.toString()}`, { method: 'GET' });
+
+    const items = Array.isArray((res as any)?.items)
+      ? (res as any).items
+      : Array.isArray(res)
+        ? (res as any)
+        : [];
+
+    const batchCount = items.filter((c: any) => String(c?.user_id ?? c?.user?.id) === String(user_id)).length;
+    totalForUser += batchCount;
+
+    if (typeof (res as any)?.count === 'number') total = (res as any).count as number;
+    else if (items.length < limit) total = offset + items.length;
+
+    if (items.length < limit) break; // nothing more to fetch
+    offset += limit;
+  }
+
+  return totalForUser;
+}
+
 export async function addLike(post_id: string, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -274,12 +313,14 @@ export default {
   fetchComments,
   fetchPosts,
   fetchPost,
+  fetchPostsCountByUser,
   fetchCurrentUser,
   updateUser,
   createPost,
   fetchUserByUsername,
   fetchLikesCount,
   fetchLikesCountByUser,
+  fetchCommentsCountByUser,
   addLike,
   removeLike,
   createComment,

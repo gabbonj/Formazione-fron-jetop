@@ -145,7 +145,17 @@ export default function PostDetail({ id }: { id: string }) {
                       <AvatarFallback>{authorName?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
               </Avatar>
               <div>
-                      <div className="text-sm font-semibold text-zinc-100">{authorName ? `@${authorName}` : <span className="inline-block h-5 w-40 rounded bg-zinc-700 animate-pulse" />}</div>
+                      <div className="text-sm font-semibold text-zinc-100">
+                        {authorName ? (
+                          authorSlug ? (
+                            <Link href={`/user/${authorSlug}`}>@{authorName}</Link>
+                          ) : (
+                            `@${authorName}`
+                          )
+                        ) : (
+                          <span className="inline-block h-5 w-40 rounded bg-zinc-700 animate-pulse" />
+                        )}
+                      </div>
                 <div className="text-xs text-zinc-500">{new Date(post.created_at).toLocaleString()}</div>
               </div>
             </div>

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchUserByUsername, fetchPosts, fetchComments, fetchLikesCountByUser } from "@/lib/api";
+import { fetchUserByUsername, fetchPosts, fetchCommentsCountByUser, fetchLikesCountByUser } from "@/lib/api";
 import PostItem from "@/components/post-item";
 import BackLink from "@/components/back-link";
 
@@ -16,37 +16,10 @@ export default function UserPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [postCount, setPostCount] = useState(0);
-  const [commentCount, setCommentCount] = useState(0);
-  const [likesCount, setLikesCount] = useState(0);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [postCount, setPostCount] = useState<number | null>(null);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
+  const [likesCount, setLikesCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  async function countUserComments(userId: string) {
-    const pageSize = 100;
-    let offset = 0;
-    let total = 0;
-    let totalAvailable = Number.POSITIVE_INFINITY;
-    let safety = 0;
-
-    while (offset < totalAvailable && safety < 50) {
-      const res: any = await fetchComments({ limit: pageSize, offset });
-      let items: any[] = [];
-      if (res == null) items = [];
-      else if (Array.isArray(res)) items = res;
-      else if (Array.isArray(res.items)) items = res.items;
-      else if (Array.isArray(res.data)) items = res.data;
-
-      totalAvailable = typeof res?.count === 'number' ? res.count : offset + items.length;
-      total += items.filter((c) => String(c.user_id) === String(userId)).length;
-
-      if (items.length < pageSize || items.length === 0) break;
-      offset += pageSize;
-      safety += 1;
-    }
-
-    return total;
-  }
 
   useEffect(() => {
     if (!username) return;
@@ -54,6 +27,9 @@ export default function UserPage() {
     async function load() {
       setLoading(true);
       setError(null);
+      setPostCount(null);
+      setCommentCount(null);
+      setLikesCount(null);
       try {
         const u = await fetchUserByUsername(String(username));
         if (!mounted) return;
@@ -61,7 +37,6 @@ export default function UserPage() {
           setError('Utente non trovato');
           setUser(null);
           setPosts([]);
-          setPostCount(0);
           return;
         }
         setUser(u);
@@ -76,14 +51,28 @@ export default function UserPage() {
           else if (Array.isArray(res.data)) items = res.data;
           else if (res.items && Array.isArray(res.items)) items = res.items;
           setPosts(items);
+
           const totalPosts = typeof res?.count === 'number' ? res.count : items.length;
           setPostCount(totalPosts);
         } catch (e) {
           // ignore posts error but keep user
           console.error(e);
           setPosts([]);
-          setPostCount(0);
+          setPostCount(null);
         }
+
+        // fetch counts for comments and likes in parallel
+        Promise.allSettled([
+          fetchCommentsCountByUser(String(u.id)),
+          fetchLikesCountByUser(String(u.id)),
+        ]).then((results) => {
+          if (!mounted) return;
+          const [commentsRes, likesRes] = results;
+          if (commentsRes.status === 'fulfilled') setCommentCount(commentsRes.value);
+          else setCommentCount(null);
+          if (likesRes.status === 'fulfilled') setLikesCount(likesRes.value);
+          else setLikesCount(null);
+        });
       } catch (err: unknown) {
         setError(String(err));
       } finally {
@@ -93,36 +82,6 @@ export default function UserPage() {
     load();
     return () => { mounted = false; };
   }, [username]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    let mounted = true;
-    setStatsLoading(true);
-    setCommentCount(0);
-    setLikesCount(0);
-
-    async function loadStats() {
-      try {
-        const [likes, comments] = await Promise.all([
-          fetchLikesCountByUser(String(user.id)),
-          countUserComments(String(user.id)),
-        ]);
-        if (!mounted) return;
-        setLikesCount(likes);
-        setCommentCount(comments);
-      } catch (e) {
-        if (!mounted) return;
-        setLikesCount(0);
-        setCommentCount(0);
-      } finally {
-        if (mounted) setStatsLoading(false);
-      }
-    }
-
-    loadStats();
-
-    return () => { mounted = false; };
-  }, [user?.id]);
 
   if (loading) {
     return (
@@ -170,7 +129,7 @@ export default function UserPage() {
             </div>
 
             <div className="ml-auto text-right">
-              <div className="text-sm text-zinc-400">{user?.created_at ? `Si è unito il ${new Date(user.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}</div>
+              <div className="text-sm text-zinc-400">{user?.created_at ? `Si è unito il ${new Date(user.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}</div>
             </div>
           </div>
 
@@ -181,18 +140,15 @@ export default function UserPage() {
           )}
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[{ label: 'Post', value: postCount }, { label: 'Commenti', value: commentCount }, { label: 'Mi piace dati', value: likesCount }].map((stat) => (
-              <div key={stat.label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-[#0c141d] px-4 py-3">
-                <span className="text-sm text-zinc-400">{stat.label}</span>
-                <span className="text-xl font-semibold text-zinc-100">{statsLoading ? '...' : stat.value}</span>
-              </div>
-            ))}
+            <Stat label="Post" value={postCount ?? posts.length} />
+            <Stat label="Commenti" value={commentCount ?? '—'} />
+            <Stat label="Mi piace" value={likesCount ?? '—'} />
           </div>
         </div>
 
         <section className="mt-6">
 
-          <h2 className="text-lg font-semibold mb-4">{postCount} post pubblici:</h2>
+          <h2 className="text-lg font-semibold mb-4">{posts.length} post pubblici:</h2>
           {posts.length === 0 ? (
             <div className="text-zinc-500">Nessun post pubblico trovato.</div>
           ) : (
@@ -204,6 +160,15 @@ export default function UserPage() {
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-[#0b131c] px-4 py-3">
+      <div className="text-xs uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-zinc-100">{typeof value === 'number' ? value : value ?? '—'}</div>
     </div>
   );
 }
