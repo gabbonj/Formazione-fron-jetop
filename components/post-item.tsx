@@ -130,7 +130,11 @@ export default function PostItem({ post }: { post: Post }) {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {authorName ? (
-                  <Link href={`/user/${authorSlug ?? ""}`} onClick={(e:any) => e.stopPropagation()} className="block truncate text-sm font-semibold text-zinc-100">
+                  <Link
+                    href={`/user/${authorSlug ?? ""}`}
+                    onClick={(e:any) => e.stopPropagation()}
+                    className="block truncate text-sm font-semibold text-zinc-100 hover:underline"
+                  >
                     @{authorName}
                   </Link>
                 ) : (

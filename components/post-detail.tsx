@@ -142,20 +142,20 @@ export default function PostDetail({ id }: { id: string }) {
           <header className="mb-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                      <AvatarFallback>{authorName?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
+                <AvatarFallback>{authorName?.[0]?.toUpperCase() ?? 'G'}</AvatarFallback>
               </Avatar>
               <div>
-                      <div className="text-sm font-semibold text-zinc-100">
-                        {authorName ? (
-                          authorSlug ? (
-                            <Link href={`/user/${authorSlug}`}>@{authorName}</Link>
-                          ) : (
-                            `@${authorName}`
-                          )
-                        ) : (
-                          <span className="inline-block h-5 w-40 rounded bg-zinc-700 animate-pulse" />
-                        )}
-                      </div>
+                <div className="text-sm font-semibold text-zinc-100">
+                  {authorName ? (
+                    authorSlug ? (
+                      <Link href={`/user/${authorSlug}`} className="hover:underline">@{authorName}</Link>
+                    ) : (
+                      `@${authorName}`
+                    )
+                  ) : (
+                    <span className="inline-block h-5 w-40 rounded bg-zinc-700 animate-pulse" />
+                  )}
+                </div>
                 <div className="text-xs text-zinc-500">{new Date(post.created_at).toLocaleString()}</div>
               </div>
             </div>
