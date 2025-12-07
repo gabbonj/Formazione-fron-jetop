@@ -35,6 +35,8 @@ export default function PostDetail({ id }: { id: string }) {
 
   async function load() {
     setLoading(true);
+    setLiked(false);
+    setLikes(0);
     try {
       // try to load post
       const p = await fetchPost(id);
@@ -53,11 +55,11 @@ export default function PostDetail({ id }: { id: string }) {
       }
       // fetch likes count (API may return count or object)
       try {
-        const l = await fetchLikesCount(id);
-        if (l == null) setLikes(0);
-        else if (typeof l.count === 'number') setLikes(l.count);
-        else if (typeof l === 'number') setLikes(l);
-        else if (Array.isArray(l.items)) setLikes(l.items.length);
+        const token = (session as any)?.token;
+        const l = await fetchLikesCount(id, token);
+        const likeCount = typeof l?.count === 'number' ? l.count : typeof l === 'number' ? l : 0;
+        setLikes(likeCount);
+        if (typeof l?.liked === 'boolean') setLiked(l.liked);
       } catch (e) {
         // ignore likes errors
       }

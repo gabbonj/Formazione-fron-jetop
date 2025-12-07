@@ -57,51 +57,13 @@ export default function PostItem({ post }: { post: Post }) {
   const [likeLoading, setLikeLoading] = useState(false);
   useEffect(() => {
     let mounted = true;
-    fetchLikesCount(post.id)
+    const token = (session as any)?.token;
+    fetchLikesCount(post.id, token)
       .then((res: any) => {
-        // res might be { count: number } or { items: [...] }
         if (!mounted) return;
-        if (res == null) return setLikes(0);
-        if (typeof res.count === 'number') setLikes(res.count);
-        else if (Array.isArray(res.items)) setLikes(res.items.length);
-        else if (typeof res === 'number') setLikes(res);
-        // if API returned items, try to detect if current user is among them
-        try {
-          if (Array.isArray(res.items) && (session as any)?.token) {
-            // decode token to extract user id
-            const t = (session as any).token as string;
-            let uid: string | null = null;
-            try {
-              const parts = t.split('.');
-              if (parts.length >= 2) {
-                const payload = parts[1];
-                const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-                const json = decodeURIComponent(
-                  atob(b64)
-                    .split('')
-                    .map(function (c) {
-                      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    })
-                    .join('')
-                );
-                const obj = JSON.parse(json);
-                uid = obj.sub || obj.user_id || obj.id || obj.uid || null;
-              }
-            } catch (er) {
-              uid = null;
-            }
-
-            if (uid) {
-              const found = res.items.some((it: any) => {
-                const candidate = String(it?.user_id ?? it?.user?.id ?? it?.user ?? it?.id ?? it);
-                return candidate === String(uid);
-              });
-              setLiked(Boolean(found));
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
+        const count = typeof res?.count === 'number' ? res.count : typeof res === 'number' ? res : 0;
+        setLikes(count);
+        if (typeof res?.liked === 'boolean') setLiked(res.liked);
       })
       .catch(() => {})
       .finally(() => {});

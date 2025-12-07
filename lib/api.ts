@@ -93,15 +93,19 @@ export async function fetchUser(id: string, token?: string) {
 }
 
 // Try to extract user id from a JWT token's payload (base64url decode)
-function getUserIdFromToken(token: string): string | null {
+export function getUserIdFromToken(token: string): string | null {
   try {
     const parts = token.split('.');
     if (parts.length < 2) return null;
     const payload = parts[1];
     const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    // atob is available in browsers; in Node this may not exist but this code runs client-side
+    const decode = (input: string) => {
+      if (typeof atob === 'function') return atob(input);
+      if (typeof Buffer !== 'undefined') return Buffer.from(input, 'base64').toString('binary');
+      return '';
+    };
     const json = decodeURIComponent(
-      atob(b64)
+      decode(b64)
         .split('')
         .map(function (c) {
           return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
@@ -162,9 +166,58 @@ export async function fetchUserByUsername(username: string) {
   return null;
 }
 
-export async function fetchLikesCount(post_id: string) {
+export async function fetchLikesCount(post_id: string, token?: string) {
   const qs = new URLSearchParams({ post_id, count: 'true' });
-  return request(`/api/likes?${qs.toString()}`, { method: 'GET' });
+  const res = await request(`/api/likes?${qs.toString()}`, { method: 'GET' });
+
+  const countValue =
+    res == null
+      ? 0
+      : typeof res.count === 'number'
+        ? res.count
+        : Array.isArray(res.items)
+          ? res.items.length
+          : typeof res === 'number'
+            ? res
+            : 0;
+
+  let liked = false;
+  const userId = token ? getUserIdFromToken(token) : null;
+
+  if (userId) {
+    const userQs = new URLSearchParams({ post_id, user_id: userId, count: 'true' });
+    try {
+      const userRes = await request(`/api/likes?${userQs.toString()}`, { method: 'GET' });
+      const userCount =
+        userRes == null
+          ? 0
+          : typeof userRes.count === 'number'
+            ? userRes.count
+            : Array.isArray(userRes.items)
+              ? userRes.items.length
+              : typeof userRes === 'number'
+                ? userRes
+                : 0;
+      liked = userCount > 0;
+    } catch (e) {
+      liked = false;
+    }
+  }
+
+  // Fallback: if the initial response included items, detect liked from there without a second call
+  if (!liked && userId && Array.isArray(res?.items)) {
+    liked = res.items.some((it: any) => String(it?.user_id ?? it?.user?.id ?? it?.user ?? it?.id ?? it) === String(userId));
+  }
+
+  return { count: countValue, liked };
+}
+
+export async function fetchLikesCountByUser(user_id: string) {
+  const qs = new URLSearchParams({ user_id, count: 'true' });
+  const res = await request(`/api/likes?${qs.toString()}`, { method: 'GET' });
+  if (res && typeof (res as any).count === 'number') return (res as any).count as number;
+  if (typeof res === 'number') return res;
+  return 0;
 }
 
 export async function addLike(post_id: string, token?: string) {
@@ -226,6 +279,7 @@ export default {
   createPost,
   fetchUserByUsername,
   fetchLikesCount,
+  fetchLikesCountByUser,
   addLike,
   removeLike,
   createComment,
