@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { fetchLikesCount, addLike, removeLike, fetchCommentsCount, fetchUser } from "@/lib/api";
+import { fetchLikesCount, addLike, removeLike, fetchCommentsCount, fetchUser, updatePost, deletePost, getUserIdFromToken } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export type Post = {
   id: string;
@@ -18,15 +19,30 @@ export type Post = {
   user?: { id: string; username: string } | null;
 };
 
-export default function PostItem({ post }: { post: Post }) {
+type Props = {
+  post: Post;
+  onUpdated?: (post: Post) => void;
+  onDeleted?: (id: string) => void;
+};
+
+export default function PostItem({ post, onUpdated, onDeleted }: Props) {
   const initialName = getUsername(post);
   const [authorName, setAuthorName] = useState<string>(() => (initialName && !isLikelyId(initialName) ? initialName : ""));
   const [authorSlug, setAuthorSlug] = useState<string>(() => {
     const s = getUserSlug(post);
     return s && !isLikelyId(s) ? s : "";
   });
+  const [content, setContent] = useState<string>(post.content || "");
   const router = useRouter();
   const { data: session } = useSession();
+  const token = (session as any)?.token as string | undefined;
+
+  const ownerId = useMemo(() => String((post as any)?.user_id ?? post.user?.id ?? ""), [post]);
+  const [isOwner, setIsOwner] = useState(false);
+  useEffect(() => {
+    const uid = token ? getUserIdFromToken(token) : null;
+    setIsOwner(Boolean(uid && ownerId && String(uid) === String(ownerId)));
+  }, [token, ownerId]);
 
   useEffect(() => {
     let mounted = true;
@@ -82,6 +98,56 @@ export default function PostItem({ post }: { post: Post }) {
       .finally(() => {});
     return () => { mounted = false; };
   }, [post.id]);
+
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(post.content || "");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setContent(post.content || "");
+    setEditText(post.content || "");
+  }, [post]);
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("Eliminare questo post?")) return;
+    if (deleting) return;
+    setDeleting(true);
+    setActionError(null);
+    try {
+      await deletePost(post.id, token || undefined);
+      if (onDeleted) onDeleted(post.id);
+      else router.refresh();
+    } catch (err: any) {
+      setActionError(err?.data || "Errore durante l'eliminazione");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleSave(e?: React.MouseEvent) {
+    if (e) e.stopPropagation();
+    if (!editText.trim()) {
+      setActionError("Il contenuto non può essere vuoto");
+      return;
+    }
+    if (saving) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      const updated = await updatePost(post.id, { content: editText }, token || undefined);
+      const nextPost = { ...post, ...updated, content: updated?.content ?? editText } as Post;
+      setContent(nextPost.content);
+      onUpdated?.(nextPost);
+      setEditing(false);
+    } catch (err: any) {
+      setActionError(err?.data || "Errore durante l'aggiornamento");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function toggleLike() {
     if (likeLoading) return;
@@ -157,17 +223,65 @@ export default function PostItem({ post }: { post: Post }) {
                   </svg>
                   <span className="text-sm">{commentCount}</span>
                 </Link>
+                {isOwner && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      aria-label="Modifica"
+                      variant="ghost"
+                      className="text-zinc-300 hover:text-white"
+                      onClick={(e) => { e.stopPropagation(); setActionError(null); setEditing(true); setEditText(content || ""); }}
+                    >
+                      ✏️
+                    </Button>
+                    <Button
+                      aria-label="Elimina"
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                    >
+                      🗑️
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="mt-4 text-zinc-200 text-base leading-relaxed prose prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content || ""}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content || ""}</ReactMarkdown>
             </div>
+
+            {actionError && <div className="mt-2 text-sm text-red-400">{actionError}</div>}
 
           </div>
         </div>
       </div>
       <div className="mt-4 border-b border-zinc-800" />
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={() => setEditing(false)}>
+          <div className="w-full max-w-lg rounded-md bg-[#0f1720] border border-zinc-800 p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-zinc-100">Modifica post</h3>
+              <button className="text-zinc-400 hover:text-zinc-200" onClick={() => setEditing(false)} aria-label="Chiudi">✕</button>
+            </div>
+            <Textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={6}
+              className="bg-[#0b1520] border-zinc-800 text-zinc-100"
+              placeholder="Aggiorna il contenuto..."
+            />
+            {actionError && <div className="mt-3 text-sm text-red-400">{actionError}</div>}
+            <div className="mt-4 flex items-center justify-end gap-3">
+              <Button variant="ghost" onClick={() => setEditing(false)} className="text-zinc-300">Annulla</Button>
+              <Button onClick={handleSave} disabled={saving} className="bg-[#0b66b0] text-white hover:bg-[#0a5a9b]">
+                {saving ? "Salvataggio..." : "Salva"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </article>
   );

@@ -94,6 +94,25 @@ export async function fetchPostsCountByUser(user_id: string) {
 export async function fetchPost(id: string) {
   return request(`/api/posts/${id}`, { method: 'GET' });
 }
+// Update a post by id (requires Authorization header)
+export async function updatePost(id: string, payload: { content: string }, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return request(`/api/posts/${id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(payload),
+  });
+}
+// Delete a post by id (requires Authorization header)
+export async function deletePost(id: string, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return request(`/api/posts/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+}
 // Fetch a user by id (UUID). Optionally pass a token for Authorization header.
 export async function fetchUser(id: string, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -317,6 +336,8 @@ export default {
   fetchCurrentUser,
   updateUser,
   createPost,
+  updatePost,
+  deletePost,
   fetchUserByUsername,
   fetchLikesCount,
   fetchLikesCountByUser,

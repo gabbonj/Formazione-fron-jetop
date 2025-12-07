@@ -11,7 +11,7 @@ import { getUsername, getUserSlug, isLikelyId } from "@/lib/utils";
 import { fetchUser } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike } from "@/lib/api";
+import { fetchPost, fetchComments, createComment, fetchLikesCount, addLike, removeLike, updatePost, deletePost, getUserIdFromToken } from "@/lib/api";
 import CommentItem from "@/components/comment-item";
 import BackLink from "@/components/back-link";
 
@@ -30,8 +30,15 @@ export default function PostDetail({ id }: { id: string }) {
   const [liked, setLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+  const token = (session as any)?.token as string | undefined;
 
   async function load() {
     setLoading(true);
@@ -95,7 +102,14 @@ export default function PostDetail({ id }: { id: string }) {
       setAuthorName(getUsername(post));
       setAuthorSlug(getUserSlug(post));
     }
+    const uid = token ? getUserIdFromToken(token) : null;
+    const ownerId = userId ? String(userId) : '';
+    if (mounted) setIsOwner(Boolean(uid && ownerId && String(uid) === ownerId));
     return () => { mounted = false; };
+  }, [post, token]);
+
+  useEffect(() => {
+    setEditText(post?.content || "");
   }, [post]);
 
   async function submitComment() {
@@ -130,6 +144,43 @@ export default function PostDetail({ id }: { id: string }) {
     } catch (e: any) {
       if (e?.status === 401) router.push('/login');
       else console.error(e);
+    }
+  }
+
+  async function handleUpdate() {
+    if (!editText.trim() || !post) {
+      setActionError("Il contenuto non può essere vuoto");
+      return;
+    }
+    if (saving) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      const updated = await updatePost(id, { content: editText }, token || undefined);
+      const nextPost = { ...post, ...updated, content: updated?.content ?? editText };
+      setPost(nextPost);
+      setEditing(false);
+    } catch (e: any) {
+      if (e?.status === 401) router.push('/login');
+      else setActionError(e?.data || "Errore durante l'aggiornamento");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Eliminare definitivamente il post?")) return;
+    if (deleting) return;
+    setDeleting(true);
+    setActionError(null);
+    try {
+      await deletePost(id, token || undefined);
+      router.push('/');
+    } catch (e: any) {
+      if (e?.status === 401) router.push('/login');
+      else setActionError(e?.data || "Errore durante l'eliminazione");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -177,7 +228,29 @@ export default function PostDetail({ id }: { id: string }) {
               </Button>
 
               <div className="flex items-center gap-2">💬 <span className="text-sm">{comments.length}</span></div>
+
+              {isOwner && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Button
+                    variant="ghost"
+                    className="text-zinc-300 hover:text-white"
+                    onClick={() => { setActionError(null); setEditing(true); setEditText(post.content || ""); }}
+                  >
+                    ✏️ Modifica
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    🗑️ Elimina
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {actionError && <div className="mt-2 text-sm text-red-400">{actionError}</div>}
           </header>
         )}
 
@@ -204,6 +277,31 @@ export default function PostDetail({ id }: { id: string }) {
           <CommentItem key={c.id} comment={c} />
         ))}
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={() => setEditing(false)}>
+          <div className="w-full max-w-xl rounded-md bg-[#0f1720] border border-zinc-800 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-zinc-100">Modifica post</h3>
+              <button className="text-zinc-400 hover:text-zinc-200" onClick={() => setEditing(false)} aria-label="Chiudi">✕</button>
+            </div>
+            <Textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={8}
+              className="bg-[#0b1520] border-zinc-800 text-zinc-100"
+              placeholder="Aggiorna il contenuto del post"
+            />
+            {actionError && <div className="mt-3 text-sm text-red-400">{actionError}</div>}
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <Button variant="ghost" onClick={() => setEditing(false)} className="text-zinc-300">Annulla</Button>
+              <Button onClick={handleUpdate} disabled={saving} className="bg-[#0b66b0] text-white hover:bg-[#0a5a9b]">
+                {saving ? "Salvataggio..." : "Salva"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

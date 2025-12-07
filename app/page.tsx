@@ -41,6 +41,14 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [status]);
 
+  function handlePostUpdated(updated: Comment) {
+    setItems((prev) => prev.map((it) => (it.id === updated.id ? { ...it, ...updated } : it)));
+  }
+
+  function handlePostDeleted(id: string) {
+    setItems((prev) => prev.filter((it) => it.id !== id));
+  }
+
   return (
     <div className="min-h-screen bg-[#0b0f13] text-zinc-100">
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-6 px-6 py-12">
@@ -103,7 +111,7 @@ export default function Home() {
               ) : (
                 <div className="space-y-6">
                   {items.map((c) => (
-                    <PostItem key={c.id} post={c} />
+                    <PostItem key={c.id} post={c} onUpdated={handlePostUpdated} onDeleted={handlePostDeleted} />
                   ))}
                 </div>
               )}
